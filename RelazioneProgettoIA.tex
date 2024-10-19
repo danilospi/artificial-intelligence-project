@@ -1,0 +1,222 @@
+\documentclass[12pt]{article}
+\usepackage{lingmacros}
+\usepackage{tree-dvips}
+\usepackage{listings}
+\usepackage[utf8]{inputenc} % Required for inputting international characters
+\usepackage[T1]{fontenc} % Output font encoding for international characters
+\usepackage{stix} % Use the STIX fonts
+
+\usepackage{listings}
+\usepackage{color}
+\usepackage{graphicx}
+\usepackage[top=35mm]{geometry}
+
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+
+\lstset{frame=tb,
+  language=Python,
+  aboveskip=3mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  columns=flexible,
+  basicstyle={\small\ttfamily},
+  numbers=none,
+  numberstyle=\tiny\color{gray},
+  keywordstyle=\color{blue},
+  commentstyle=\color{dkgreen},
+  stringstyle=\color{mauve},
+  breaklines=false,
+  breakatwhitespace=true,
+  tabsize=3
+}
+
+\begin{document}
+
+%----------------------------------------------------------------------------------------
+%	TITLE PAGE
+%----------------------------------------------------------------------------------------
+% Suppresses displaying the page number on the title page and the subsequent page counts as page 1
+	
+	\raggedleft % Right align the title page
+	
+	\rule{1pt}{\textheight} % Vertical line
+	\hspace{0.05\textwidth} % Whitespace between the vertical line and title page text
+	\parbox[b]{0.75\textwidth}{ % Paragraph box for holding the title page text, adjust the width to move the title page left or right on the page
+		
+		{\Huge\bfseries Equitable Coloring Graph: \\[0.2\baselineskip] Risoluzione con algoritmo \\genetico}\\[3\baselineskip] % Title
+		{\Large\textsc{Danilo Spinelli}\\[0.5\baselineskip]} % Author name, lower case for consistent small caps
+		{\Large\textsc{1000008680}}
+		
+		\vspace{0.4\textheight} % Whitespace between the title block and the publisher
+	}
+
+%----------------------------------------------------------------------------------------
+\begin{flushleft}
+\section*{1.0 Il problema}
+
+Dato un grafo non orientato G = (V, E) e un intero positivo k, la k-colorazione 
+equa di G è una partizione dell'insieme dei vertici V in k 
+insiemi disgiunti, tali che le cardinalità di due insiemi indipendenti qualsiasi, differiscano di uno al massimo.
+Il problema della colorazione equa è trovare il k più piccolo per il quale esista una colorazione del grafo equa.
+Questo problema è noto essere NP-hard e quindi computazionalmente impegnativo. In questa documentazione, presento 
+la mia soluzione per risolvere il problema attraverso un algoritmo genetico.
+
+
+\section*{2.0 Il Progetto}
+Il progetto è stato implementato completamente in linguaggio Python ed è composto da due script:
+
+\enumsentence{main.py}
+\enumsentence{equitable\_graph\_colorizer.py}
+
+
+\subsection*{2.1 Main}
+Nel Primo script è presente il main del progetto:\\[0.8\baselineskip]
+
+\begin{lstlisting}[belowskip=2.6 \baselineskip]
+if __name__ == '__main__':
+    path = 'testGraph/GEOM30b.col'
+    params = {
+        'iteration_number': 5,
+        'K': 10,
+        'population_size': 1000,
+        'mutation_probability': 0.8,
+        'crossover_probability': 0.8,
+        'max_improvements': 50,
+    }
+
+    egc = EquitableGraphColorizer(path, params)
+
+    risultato = egc.findKMin()
+\end{lstlisting}
+
+
+Qui vengono inizializzate le variabili fondamentali per l'esecuzione dell'algoritmo genetico:
+\begin{itemize}
+ \item K: numero di colori da utilizzare per colorare equamente il grafo.
+ \item iteration\_number: quante volte decrementare K di 1 dopo aver trovato una soluzione ammissibile.
+ \item population\_size: dimensione della popolazione.
+ \item mutation\_probability: probabilità che un individuo della popolazione muti.
+ \item crossover\_probability: probabilità che avvenga il crossover fra due individui.
+ \item max\_improvements: numero di cicli massimi per migliorare la popolazione affinchè si trovi una soluzione ammissibile.
+\end{itemize}
+Oltre a queste variabili viene specificato il path del file contenente il grafo.
+\\Successivamente viene creato un oggetto di classe \textit{EquitableGraphColorizer} e viene richiamato il metodo 
+\textit{findKMin()} del secondo script.\\[0.5\baselineskip]
+
+Nella seconda parte dello script troviamo il seguente codice:
+\begin{lstlisting}[belowskip=0.5 \baselineskip]
+mioGrafo = egc.loadGraph('testGraph/GEOM30b.col')
+    G = nx.Graph()
+    for x in mioGrafo.vertices:
+        G.add_node((x))
+    for i in mioGrafo.edges:
+        G.add_edge(i[0], i[1])
+
+    nx.draw(G, with_labels=True, node_color=colors, label=all_color_number)
+    print("K: ",len(all_color))
+    color_patch = mpatches.Patch(label=all_color_number)
+    plt.legend(handles=[color_patch])
+    plt.show()
+\end{lstlisting}
+Attraverso la libreria networkX disegno il grafo con la soluzione che l'algoritmo genetico ha trovato 
+(un esempio di output è mostrato in figura 1).
+
+\begin{figure}
+\vspace*{-2.5cm}
+  \includegraphics[width=\linewidth]{image/resultGraph.png}
+  \caption{Esempio di output.
+  I numeri in alto a sinistra rappresentano le cardinalità delle classi di colore utilizzate.}
+\end{figure}
+
+\subsection*{2.2 Equitable Graph Colorizer}
+Lo script \textit{equitable\_graph\_colorizer.py} è composto da 2 classi:
+\begin{enumerate}
+\item Graph
+\item EquitableGraphColorizer
+\end{enumerate}
+
+La prima classe è la più semplice rappresentazione di un grafo che si possa avere, cioè
+una lista di vertici e di archi.
+\begin{lstlisting}[belowskip=0.5 \baselineskip]
+class Graph:
+    def __init__(self):
+        self.vertices = []
+        self.edges = []
+
+    def __str__(self):
+        return 'Nodes: {}, Edges: {}.'.format(len(self.vertices), len(self.edges))
+\end{lstlisting}
+
+La seconda classe invece è composta da 14 metodi che costituiscono il vero e proprio algoritmo genetico.\\
+I metodi implementati sono i seguenti:
+\begin{enumerate}
+\item loadGraph()
+\item findKMin()
+\item applyGeneticAlgorithm()
+\item initializePopulation()
+\item calculateFitnessFunction()
+\item getColor()
+\item selectEvenPopulation()
+\item applyMutation()
+\item selectAmmissibleSolution()
+\item calculateCardinality()
+\item selectColorByCardinality()
+\item stopConditionReached()
+\item createColorClasses()
+\item applyCrossover()
+\end{enumerate}
+
+Vediamoli tutti per comprendere il funzionamento dell'algoritmo genetico.
+
+\subsubsection*{1. loadGraph()}
+Metodo utilizzato per leggere i file di tipo \textit{.col} ed impostare il grafo per eseguire la colorazione.
+
+\subsubsection*{2. findKMin()}
+Richiamato direttamente dal main. Qui viene invocato il metodo \textit{applyGeneticAlgorithm()}
+che non appena trova una soluzione ammissibile, viene inserita nella lista result e viene decrementato K.
+Se non è stata trovata una soluzione viene restituito l'ultimo elemento conservato in result.
+
+\begin{lstlisting}
+    def findKMin(self):
+        results = []
+        for n in range(self.iteration_number):
+            for i in range(self.K):
+                self.colors.append(i)
+            ris = self.applyGeneticAlgorithm()
+            if ris:
+                results.append(ris)
+                print("Solution found with K = ", self.K)
+            else:
+                break
+            self.K -= 1
+            self.colors = []
+        return results
+\end{lstlisting}
+
+\subsubsection*{2. applyGeneticAlgorithm()}
+Questo metodo raccoglie tutti i passi dell'algoritmo genetico:\\
+1) Inizializzazione della popolazione\\
+2) Selezione degli individui migliori\\
+3) Operazione di crossover\\
+4) Operazione di mutazione\\
+
+\begin{lstlisting}
+        def applyGeneticAlgorithm(self):
+        print("Try to found solution with K =", self.K)
+        solutions = []
+        population = self.initializePopulation()
+        t = 0
+        program_starts = time.time()
+        while not self.stopConditionReached(population, t, solutions, program_starts):
+            print("CYCLE: ", t, " IN: ", self.max_improvements)
+            population = self.selectEvenPopulation(population)
+            population = self.applyCrossover(population)
+            population = self.applyMutation(population)
+            t += 1
+        return solutions
+\end{lstlisting}
+
+\end{flushleft}
+\end{document}

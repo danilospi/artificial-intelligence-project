@@ -1,1 +1,1 @@
-# artificial-intelligence-project
+# Progetto per la materia Intelligenza Artificiale
